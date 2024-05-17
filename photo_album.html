@@ -1,0 +1,574 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>💗GuiLoveYue Forever💗</title>
+    <meta name="description" content="Change OR Die" />
+    <script src="js/jquery.min.js"></script>
+    <link type="text/css" href="./css/style.css" rel="stylesheet" />
+	<link rel="stylesheet" href="css/style0.css" />
+    <style type="text/css">
+      * {
+        margin: 0;
+        padding: 0;
+        list-style-type: none;
+      }
+      a,
+      img {
+        border: 0;
+      }
+      body {
+        font: 12px/180% Arial, Helvetica, sans-serif, "微软雅黑";
+      }
+      /* 相册css */
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+      }
+    </style>
+  </head>
+
+  <body>
+  <!-- 打字 -->
+      <div class="typing">
+        <!-- 字幕 -->
+        <h2 class="header-sub-title" id="word"></h2>
+        <h2 class="header-sub-title blink">|</h2>
+      </div>
+	<audio controls autoplay="autoplay" hidden="true" loop="loop" id="audios"><source src="music/3.mp3" type="audio/mp3"/></audio>
+    <canvas id="sakura"></canvas>
+    <div class="box">
+      <ul class="minbox">
+        <li></li>
+        <li></li>
+        <li></li>
+        <li></li>
+        <li></li>
+        <li></li>
+      </ul>
+      <ol class="maxbox">
+        <li></li>
+        <li></li>
+        <li></li>
+        <li></li>
+        <li></li>
+        <li></li>
+      </ol>
+    </div>
+	
+	<script>
+// 这里使用了微信自带的WeixinJSBridgeReady事件
+document.addEventListener('WeixinJSBridgeReady', function() {
+    document.getElementById('audios').play()
+})
+ 
+</script>
+	
+	<script>
+// 将以下代码添加到js入口函数内即可
+document.addEventListener('touchstart', function() {
+    document.getElementById('audios').play()
+})
+ 
+</script>
+	
+	<script>
+// 将以下代码添加到js入口函数内即可
+document.addEventListener('click', function() {
+    document.getElementById('audios').play()
+})
+ 
+</script>
+
+	
+<script>
+			//音乐自动播放
+			$(document).ready(function() {
+				autoPlayMusic();
+				audioAutoPlay();
+			});
+
+			function audioAutoPlay() {
+				var audios = document.getElementById('audios');
+				audios.play();
+				document.addEventListener("WeixinJSBridgeReady", function() {
+					audios.play();
+				}, false);
+			}
+			// 音乐播放
+			function autoPlayMusic() {
+				// 自动播放音乐效果，解决浏览器或者APP自动播放问题
+				function musicInBrowserHandler() {
+					musicPlay(true);
+					document.body.removeEventListener('touchstart', musicInBrowserHandler);
+				}
+				document.body.addEventListener('touchstart', musicInBrowserHandler);
+				// 自动播放音乐效果，解决微信自动播放问题
+				function musicInWeixinHandler() {
+					musicPlay(true);
+					document.addEventListener("WeixinJSBridgeReady", function() {
+						musicPlay(true);
+					}, false);
+					document.removeEventListener('DOMContentLoaded', musicInWeixinHandler);
+				}
+				document.addEventListener('DOMContentLoaded', musicInWeixinHandler);
+			}
+
+			function musicPlay(isPlay) {
+				var media = document.querySelector('#audios');
+				if (isPlay && media.paused) {
+					media.play();
+				}
+				if (!isPlay && !media.paused) {
+					media.pause();
+				}
+			}
+		</script>
+		
+
+		<script type="text/javascript">
+    window.onload = function(){
+             setInterval("toggleSound()",100);
+        }
+
+    function toggleSound() {
+                var music = document.getElementById('audio');//获取ID  
+                    
+                if (music.paused) { //判读是否播放  
+                    music.paused=false;
+                    music.play(); //没有就播放 
+                }    
+        }
+</script>
+		
+
+	
+    <!-- sakura shader -->
+    <script id="sakura_point_vsh" type="x-shader/x_vertex">
+      uniform mat4 uProjection;
+      uniform mat4 uModelview;
+      uniform vec3 uResolution;
+      uniform vec3 uOffset;
+      uniform vec3 uDOF;  //x:focus distance, y:focus radius, z:max radius
+      uniform vec3 uFade; //x:start distance, y:half distance, z:near fade start
+
+      attribute vec3 aPosition;
+      attribute vec3 aEuler;
+      attribute vec2 aMisc; //x:size, y:fade
+
+      varying vec3 pposition;
+      varying float psize;
+      varying float palpha;
+      varying float pdist;
+
+      //varying mat3 rotMat;
+      varying vec3 normX;
+      varying vec3 normY;
+      varying vec3 normZ;
+      varying vec3 normal;
+
+      varying float diffuse;
+      varying float specular;
+      varying float rstop;
+      varying float distancefade;
+
+      void main(void) {
+          // Projection is based on vertical angle
+          vec4 pos = uModelview * vec4(aPosition + uOffset, 1.0);
+          gl_Position = uProjection * pos;
+          gl_PointSize = aMisc.x * uProjection[1][1] / -pos.z * uResolution.y * 0.5;
+
+          pposition = pos.xyz;
+          psize = aMisc.x;
+          pdist = length(pos.xyz);
+          palpha = smoothstep(0.0, 1.0, (pdist - 0.1) / uFade.z);
+
+          vec3 elrsn = sin(aEuler);
+          vec3 elrcs = cos(aEuler);
+          mat3 rotx = mat3(
+              1.0, 0.0, 0.0,
+              0.0, elrcs.x, elrsn.x,
+              0.0, -elrsn.x, elrcs.x
+          );
+          mat3 roty = mat3(
+              elrcs.y, 0.0, -elrsn.y,
+              0.0, 1.0, 0.0,
+              elrsn.y, 0.0, elrcs.y
+          );
+          mat3 rotz = mat3(
+              elrcs.z, elrsn.z, 0.0,
+              -elrsn.z, elrcs.z, 0.0,
+              0.0, 0.0, 1.0
+          );
+          mat3 rotmat = rotx * roty * rotz;
+          normal = rotmat[2];
+
+          mat3 trrotm = mat3(
+              rotmat[0][0], rotmat[1][0], rotmat[2][0],
+              rotmat[0][1], rotmat[1][1], rotmat[2][1],
+              rotmat[0][2], rotmat[1][2], rotmat[2][2]
+          );
+          normX = trrotm[0];
+          normY = trrotm[1];
+          normZ = trrotm[2];
+
+          const vec3 lit = vec3(0.6917144638660746, 0.6917144638660746, -0.20751433915982237);
+
+          float tmpdfs = dot(lit, normal);
+          if(tmpdfs < 0.0) {
+              normal = -normal;
+              tmpdfs = dot(lit, normal);
+          }
+          diffuse = 0.4 + tmpdfs;
+
+          vec3 eyev = normalize(-pos.xyz);
+          if(dot(eyev, normal) > 0.0) {
+              vec3 hv = normalize(eyev + lit);
+              specular = pow(max(dot(hv, normal), 0.0), 20.0);
+          }
+          else {
+              specular = 0.0;
+          }
+
+          rstop = clamp((abs(pdist - uDOF.x) - uDOF.y) / uDOF.z, 0.0, 1.0);
+          rstop = pow(rstop, 0.5);
+          //-0.69315 = ln(0.5)
+          distancefade = min(1.0, exp((uFade.x - pdist) * 0.69315 / uFade.y));
+      }
+    </script>
+    <script id="sakura_point_fsh" type="x-shader/x_fragment">
+      #ifdef GL_ES
+      //precision mediump float;
+      precision highp float;
+      #endif
+
+      uniform vec3 uDOF;  //x:focus distance, y:focus radius, z:max radius
+      uniform vec3 uFade; //x:start distance, y:half distance, z:near fade start
+
+      const vec3 fadeCol = vec3(0.08, 0.03, 0.06);
+
+      varying vec3 pposition;
+      varying float psize;
+      varying float palpha;
+      varying float pdist;
+
+      //varying mat3 rotMat;
+      varying vec3 normX;
+      varying vec3 normY;
+      varying vec3 normZ;
+      varying vec3 normal;
+
+      varying float diffuse;
+      varying float specular;
+      varying float rstop;
+      varying float distancefade;
+
+      float ellipse(vec2 p, vec2 o, vec2 r) {
+          vec2 lp = (p - o) / r;
+          return length(lp) - 1.0;
+      }
+
+      void main(void) {
+          vec3 p = vec3(gl_PointCoord - vec2(0.5, 0.5), 0.0) * 2.0;
+          vec3 d = vec3(0.0, 0.0, -1.0);
+          float nd = normZ.z; //dot(-normZ, d);
+          if(abs(nd) < 0.0001) discard;
+
+          float np = dot(normZ, p);
+          vec3 tp = p + d * np / nd;
+          vec2 coord = vec2(dot(normX, tp), dot(normY, tp));
+
+          //angle = 15 degree
+          const float flwrsn = 0.258819045102521;
+          const float flwrcs = 0.965925826289068;
+          mat2 flwrm = mat2(flwrcs, -flwrsn, flwrsn, flwrcs);
+          vec2 flwrp = vec2(abs(coord.x), coord.y) * flwrm;
+
+          float r;
+          if(flwrp.x < 0.0) {
+              r = ellipse(flwrp, vec2(0.065, 0.024) * 0.5, vec2(0.36, 0.96) * 0.5);
+          }
+          else {
+              r = ellipse(flwrp, vec2(0.065, 0.024) * 0.5, vec2(0.58, 0.96) * 0.5);
+          }
+
+          if(r > rstop) discard;
+
+          vec3 col = mix(vec3(1.0, 0.8, 0.75), vec3(1.0, 0.9, 0.87), r);
+          float grady = mix(0.0, 1.0, pow(coord.y * 0.5 + 0.5, 0.35));
+          col *= vec3(1.0, grady, grady);
+          col *= mix(0.8, 1.0, pow(abs(coord.x), 0.3));
+          col = col * diffuse + specular;
+
+          col = mix(fadeCol, col, distancefade);
+
+          float alpha = (rstop > 0.001)? (0.5 - r / (rstop * 2.0)) : 1.0;
+          alpha = smoothstep(0.0, 1.0, alpha) * palpha;
+
+          gl_FragColor = vec4(col * 0.5, alpha);
+      }
+    </script>
+    <!-- effects -->
+    <script id="fx_common_vsh" type="x-shader/x_vertex">
+      uniform vec3 uResolution;
+      attribute vec2 aPosition;
+
+      varying vec2 texCoord;
+      varying vec2 screenCoord;
+
+      void main(void) {
+          gl_Position = vec4(aPosition, 0.0, 1.0);
+          texCoord = aPosition.xy * 0.5 + vec2(0.5, 0.5);
+          screenCoord = aPosition.xy * vec2(uResolution.z, 1.0);
+      }
+    </script>
+    <script id="bg_fsh" type="x-shader/x_fragment">
+      #ifdef GL_ES
+      //precision mediump float;
+      precision highp float;
+      #endif
+
+      uniform vec2 uTimes;
+
+      varying vec2 texCoord;
+      varying vec2 screenCoord;
+
+      void main(void) {
+          vec3 col;
+          float c;
+          vec2 tmpv = texCoord * vec2(0.8, 1.0) - vec2(0.95, 1.0);
+          c = exp(-pow(length(tmpv) * 1.8, 2.0));
+          col = mix(vec3(0.02, 0.0, 0.03), vec3(0.96, 0.98, 1.0) * 1.5, c);
+          gl_FragColor = vec4(col * 0.5, 1.0);
+      }
+    </script>
+    <script id="fx_brightbuf_fsh" type="x-shader/x_fragment">
+      #ifdef GL_ES
+      //precision mediump float;
+      precision highp float;
+      #endif
+      uniform sampler2D uSrc;
+      uniform vec2 uDelta;
+
+      varying vec2 texCoord;
+      varying vec2 screenCoord;
+
+      void main(void) {
+          vec4 col = texture2D(uSrc, texCoord);
+          gl_FragColor = vec4(col.rgb * 2.0 - vec3(0.5), 1.0);
+      }
+    </script>
+    <script id="fx_dirblur_r4_fsh" type="x-shader/x_fragment">
+      #ifdef GL_ES
+      //precision mediump float;
+      precision highp float;
+      #endif
+      uniform sampler2D uSrc;
+      uniform vec2 uDelta;
+      uniform vec4 uBlurDir; //dir(x, y), stride(z, w)
+
+      varying vec2 texCoord;
+      varying vec2 screenCoord;
+
+      void main(void) {
+          vec4 col = texture2D(uSrc, texCoord);
+          col = col + texture2D(uSrc, texCoord + uBlurDir.xy * uDelta);
+          col = col + texture2D(uSrc, texCoord - uBlurDir.xy * uDelta);
+          col = col + texture2D(uSrc, texCoord + (uBlurDir.xy + uBlurDir.zw) * uDelta);
+          col = col + texture2D(uSrc, texCoord - (uBlurDir.xy + uBlurDir.zw) * uDelta);
+          gl_FragColor = col / 5.0;
+      }
+    </script>
+    <!-- effect fragment shader template -->
+    <script id="fx_common_fsh" type="x-shader/x_fragment">
+      #ifdef GL_ES
+      //precision mediump float;
+      precision highp float;
+      #endif
+      uniform sampler2D uSrc;
+      uniform vec2 uDelta;
+
+      varying vec2 texCoord;
+      varying vec2 screenCoord;
+
+      void main(void) {
+          gl_FragColor = texture2D(uSrc, texCoord);
+      }
+    </script>
+    <!-- post processing -->
+    <script id="pp_final_vsh" type="x-shader/x_vertex">
+      uniform vec3 uResolution;
+      attribute vec2 aPosition;
+      varying vec2 texCoord;
+      varying vec2 screenCoord;
+      void main(void) {
+          gl_Position = vec4(aPosition, 0.0, 1.0);
+          texCoord = aPosition.xy * 0.5 + vec2(0.5, 0.5);
+          screenCoord = aPosition.xy * vec2(uResolution.z, 1.0);
+      }
+    </script>
+    <script id="pp_final_fsh" type="x-shader/x_fragment">
+      #ifdef GL_ES
+      //precision mediump float;
+      precision highp float;
+      #endif
+      uniform sampler2D uSrc;
+      uniform sampler2D uBloom;
+      uniform vec2 uDelta;
+      varying vec2 texCoord;
+      varying vec2 screenCoord;
+      void main(void) {
+          vec4 srccol = texture2D(uSrc, texCoord) * 2.0;
+          vec4 bloomcol = texture2D(uBloom, texCoord);
+          vec4 col;
+          col = srccol + bloomcol * (vec4(1.0) + srccol);
+          col *= smoothstep(1.0, 0.0, pow(length((texCoord - vec2(0.5)) * 2.0), 1.2) * 0.5);
+          col = pow(col, vec4(0.45454545454545)); //(1.0 / 2.2)
+
+          gl_FragColor = vec4(col.rgb, 1.0);
+          gl_FragColor.a = 1.0;
+      }
+    </script>
+
+    <script src="js/index.js"></script>
+	<script src="js/dazi.js"></script>
+	
+	<script>
+      /* 兼容H5 手机端 */
+      if (
+        navigator.userAgent.match(
+          /(phone|pod|iPhone|iPod|ios|Android|Mobile|BlackBerry|IEMobile|MQQBrowser|JUC|Fennec|wOSBrowser|BrowserNG|WebOS|Symbian|Windows Phone)/i
+        )
+      ) {
+        var box = document.querySelectorAll(".box")[0];
+        console.log(box, "移动端");
+        box.style.left = "42%";
+      }
+      // --------------------打印字 S--------------------------
+      const words = [
+        "🐢 嘿！周心悦！看这边！！",
+        "❤ 你好呀~乌龟最最最亲爱的悦悦宝! ❤",
+        "🐢 欢迎来到龟悦的世界!",
+        "🐢 等一下，服务器有点卡(免费)，特效正在路上。",
+        "🐢 你点一下立方体嘛，点嘛点嘛~",
+        "🐢 一个简易的3D相册纪念我们的第一个520🌸",
+        "🐢 (看相册时间)... ...",
+        "🐢 (好了，该看小作文了)... ...",
+        "🐢 今天也要表白：",
+        "🐢 心悦 乌龟喜欢你 超级超级喜欢你！",
+        "🐢 时间真的好快，我们在一起127天啦。",
+        "🐢 我的手机用了3年，相册的1/3都与我们有关！",
+        "🐢 悦悦宝满足了我对恋爱的所有幻想：",
+        "🐢 牵手手、抱抱、亲亲...贴贴；",
+        "🐢 睡觉觉的时候睁眼是你、闭眼也是你；",
+        "🐢 情侣头像、情侣ID、情侣手机壳，甚至情侣裤裤；",
+        "🐢 乌龟收到了这辈子的第一束花花，是悦悦送的！",
+        "🐢 心悦给乌龟做饭饭，我以前都吃不了这么多的！",
+        "🐢 心悦给乌龟照相、给我买好看的衣服 呜呜呜好贵。",
+        "🐢 心悦是乌龟肚子里的蛔虫，",
+        "🐢 她就晓得 我害怕把她拍的不好看，",
+        "🐢 她还一直鼓励我教我，她有好多好多耐心。",
+        "🐢 我无时无刻不在宣布：乌龟是这个世界上最幸福的男孩！",
+
+        "🐢 我喜欢自信的悦悦，带领我变得自信起来。",
+        "🐢 我喜欢认真的悦悦，她专注的时候好迷人！",
+        "🐢 我喜欢撒娇的悦悦，可爱的很~ 遭不住啦",
+        "🐢 我喜欢搞笑的悦悦，她有一个帽衫 哈哈哈",
+        "🐢 我喜欢听心悦唱歌，好好听哦但是我不好意思讲",
+        "🐢 ... ...",
+        "🐢 我不要啥子完美的，我就喜欢她的全部样子！",
+        "🐢 我们在一起的大部分时间都是快乐的，",
+        "🐢 不过也遇到了一些小小的摩擦，",
+        "🐢 有问题一点都不可怕，心悦总在带领我积极解决问题，",
+        "🐢 我对未来更加有信心啦，爱哭龟要变得坚强！",
+        "🐢 心悦真的好好哦，乌龟笨笨的不过我会一直进步。",
+
+        "🐢 乌龟没有文采，只会讲述生活的点点滴滴，",
+        "🐢 乌龟也不会唱歌，只能用个背景音乐来烘托点氛围，",
+        "🐢 乌龟不是专业做网页的，只能拼凑一个5角钱特效的相册，",
+        "🐢 但是乌龟有一颗炽热的心，里面装着悦悦。",
+        "🐢 乌龟的小心心一直在想：我要让心悦开心、要对心悦事事有回应，",
+        "🐢 要让心悦成为这个世界上最幸福的女孩！",
+        "🐢 因为她选择了乌龟，把自己的未来都交付给了乌龟；",
+        "🐢 因为乌龟也想要和她成为家人。",
+
+        "🐢 我们今后还有无数个520，和悦悦在一起每一天都是情人节！",
+        "🐢 最后，我还要强调一遍，乌龟会坚定的留在悦悦身边。",
+        "🐢 让我们一起见证：",
+        "🐢 所爱隔山海，山海不可平；",
+        "🐢 海有舟可渡，山有路可行；",
+        "🐢 此爱翻山海，山海亦可平。",
+        "🐢 5 2 0 1 3 1 4 李涛爱周心悦一生一世！",
+        "🐢 to be continued 👨🏻👩🏻",
+
+        "🐢 网页代码是无限循环的，下面会重复以上全部文字...",
+        "🐢 3...",
+        "🐢 2...",
+        "🐢 1...",
+        "🌼 🐢❤🌠🌙 🌼",
+      ];
+      let PPP = 0;
+      let timer;
+      // speed in ms
+      let deleteDelay = 3000;
+      let typeSpeed = 80;
+      let delSpeed = 20;
+      /* 开始编写文字 */
+      function typingEffect() {
+        console.log(i, "iiii");
+        console.log(words[PPP], "words[i]");
+        let word = words[PPP].split("");
+        var loopTyping = function () {
+          if (word.length > 0) {
+            document.getElementById("word").innerHTML += word.shift();
+          } else {
+            delay(function () {
+              deletingEffect(); // do stuff
+            }, deleteDelay); // end delay
+            // deletingEffect();
+            return false;
+          }
+          timer = setTimeout(loopTyping, typeSpeed);
+        };
+        loopTyping();
+      }
+
+      function deletingEffect() {
+        let word = words[PPP].split("");
+        var loopDeleting = function () {
+          if (word.length > 0) {
+            word.pop();
+            document.getElementById("word").innerHTML = word.join("");
+          } else {
+            if (words.length > PPP + 1) {
+              PPP++;
+            } else {
+              PPP = 0;
+            }
+            typingEffect();
+            return false;
+          }
+
+          timer = setTimeout(loopDeleting, delSpeed);
+        };
+
+        loopDeleting();
+      }
+
+      var delay = (function () {
+        var timer = 0;
+        return function (callback, ms) {
+          clearTimeout(timer);
+          timer = setTimeout(callback, ms);
+        };
+      })();
+      typingEffect();
+      // --------------------打印字 E--------------------------
+    </script>
+
+  </body>
+</html>
